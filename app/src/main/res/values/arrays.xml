@@ -3,5 +3,6 @@
     <string-array name="profiles">
         <item>@string/profile_student</item>
         <item>@string/profile_developer</item>
+        <item>@string/profile_other</item>
     </string-array>
 </resources>

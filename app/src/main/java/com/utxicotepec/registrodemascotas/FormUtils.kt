@@ -14,7 +14,7 @@ fun mascotasFormatter(mascotas: Mascotas): String {
     result.append("Nombre del dueño: ${mascotas.apellidos} \n")
     result.append("Peso: ${mascotas.peso} kg\n")
     result.append("Fecha de nacimiento: ${convertMillisToDate(mascotas.fechaNacimiento)}\n")
-    result.append("Especie: ${mascotas.tipoDonacion}\n")
+    result.append("Especie: ${mascotas.especie}\n")
     result.append("Señas Particulares: ${mascotas.antecedentes}")
 
     return result.toString()

@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
 
                 var openDialog by remember { mutableStateOf(false) }
                 var cleanForm by remember { mutableStateOf(false) }
-                var mascotasFilled: Mascotas? = null
+                var mascotasFilled by remember { mutableStateOf<Mascotas?>(null) }
 
                 Scaffold(modifier = Modifier.fillMaxSize(),
                     snackbarHost = { SnackbarHost(snackbarHostState) }) { innerPadding ->

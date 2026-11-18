@@ -10,20 +10,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,7 +54,6 @@ import com.utxicotepec.registrodemascotas.ui.componentes.AntTfDate
 import com.utxicotepec.registrodemascotas.ui.componentes.DatePickerModal
 import com.utxicotepec.registrodemascotas.ui.theme.RegistroDeMascotasTheme
 import com.utxicotepec.registrodemascotas.ui.theme.Typography
-import androidx.compose.ui.semantics.Role
 import kotlinx.coroutines.launch
 
 @Preview(showBackground = true)
@@ -67,15 +68,15 @@ fun MainPreview() {
     }
 }
 
+
 @OptIn(ExperimentalLayoutApi::class)
-// En MainScreen.kt
 @Composable
 fun MainView(
     modifier: Modifier,
     isClean: Boolean = false,
     onCleaned: () -> Unit,
     onError: (String) -> Unit,
-    onSave: (Mascotas) -> Unit // onSave queda como último parámetro
+    onSave: (Mascotas) -> Unit
 ) {
     val scope = rememberCoroutineScope()
 
@@ -88,9 +89,11 @@ fun MainView(
     var isAgree by remember { mutableStateOf(false) }
     var inProgress by remember { mutableStateOf(false) }
 
-    //val profiles = listOf("Estudiante", "Programador")
-    val profiles = stringArrayResource(R.array.profiles)
-    val (selectedOption, onOptionSelected) = remember { mutableStateOf(profiles[0]) }
+    // Opciones de especie (Perro, Gato, Otro) para el menú desplegable
+    val profiles = stringArrayResource(R.array.profiles).toList()
+    var selectedOption by remember {
+        mutableStateOf(profiles.first())
+    }
 
     val context = LocalContext.current
     val isShowKeyboard = WindowInsets.isImeVisible
@@ -99,10 +102,18 @@ fun MainView(
     val saveFun = {
         focus.clearFocus()
         inProgress = true
+
         scope.launch {
-            val errors = foundErrors(context, nombreValue, apellidosValue, pesoValue)
+            val errors = foundErrors(
+                context,
+                nombreValue,
+                apellidosValue,
+                pesoValue
+            )
+
             if (errors == null) {
-                kotlinx.coroutines.delay(2000L) // Retardo simulado
+                kotlinx.coroutines.delay(2000L)
+
                 val mascotas = Mascotas(
                     nombreValue,
                     apellidosValue,
@@ -111,10 +122,12 @@ fun MainView(
                     selectedOption,
                     antecedentesValue
                 )
+
                 onSave(mascotas)
             } else {
                 onError(errors)
             }
+
             inProgress = false
         }
     }
@@ -124,34 +137,49 @@ fun MainView(
         apellidosValue = ""
         pesoValue = ""
         dateValue = null
-        onOptionSelected(profiles[0])
+        selectedOption = profiles.first()
+        antecedentesValue = ""
         isAgree = false
         onCleaned()
     }
 
     Box(modifier.fillMaxWidth()) {
-        Column(Modifier.padding(horizontal = dimensionResource(R.dimen.common_padding_default))) {
+
+        Column(
+            Modifier.padding(
+                horizontal = dimensionResource(R.dimen.common_padding_default)
+            )
+        ) {
+
             Row(verticalAlignment = Alignment.CenterVertically) {
+
                 Text(
                     stringResource(R.string.form_title),
                     modifier = Modifier.weight(1f),
                     style = Typography.titleLarge
                 )
+
                 val saveAlpha = if (isShowKeyboard) 1f else 0f
+
                 Button(
                     onClick = { saveFun() },
                     modifier = Modifier.alpha(saveAlpha),
                     enabled = isAgree
                 ) {
-                    Icon(painter = painterResource(R.drawable.ic_check), contentDescription = null)
+                    Icon(
+                        painter = painterResource(R.drawable.ic_check),
+                        contentDescription = null
+                    )
                 }
             }
+
             Column(
                 Modifier
                     .imePadding()
                     .verticalScroll(rememberScrollState())
             ) {
-                //Name
+
+                // Nombre de la mascota
                 AntTextField(
                     labelRes = R.string.hint_name,
                     iconRes = R.drawable.ic_person,
@@ -161,8 +189,10 @@ fun MainView(
                         imeAction = ImeAction.Next
                     ),
                     isClean = isClean,
-                    onValueChange = { nombreValue = it })
-                //Surname
+                    onValueChange = { nombreValue = it }
+                )
+
+                // Nombre del dueño
                 AntTextField(
                     labelRes = R.string.hint_surname,
                     iconRes = R.drawable.ic_person,
@@ -171,15 +201,21 @@ fun MainView(
                         imeAction = ImeAction.Next
                     ),
                     isClean = isClean,
-                    onValueChange = { apellidosValue = it })
+                    onValueChange = { apellidosValue = it }
+                )
 
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(top = dimensionResource(R.dimen.common_padding_min)),
-                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.common_padding_default))
+                        .padding(
+                            top = dimensionResource(R.dimen.common_padding_min)
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        dimensionResource(R.dimen.common_padding_default)
+                    )
                 ) {
-                    //Height
+
+                    // Peso
                     AntTextField(
                         modifier = Modifier.weight(40f),
                         labelRes = R.string.hint_height,
@@ -193,8 +229,10 @@ fun MainView(
                         ),
                         isClean = isClean,
                         paddingTop = dimensionResource(R.dimen.common_padding_none),
-                        onValueChange = { pesoValue = it })
-                    //BirthDate
+                        onValueChange = { pesoValue = it }
+                    )
+
+                    // Fecha de nacimiento
                     AntTfDate(
                         modifier = Modifier.weight(60f),
                         labelRes = R.string.hint_birth_date,
@@ -202,90 +240,148 @@ fun MainView(
                     ) {
                         showDatePicker = true
                     }
+
                     if (showDatePicker) {
                         DatePickerModal(
                             onDateSelected = { dateValue = it },
-                            onDismiss = { showDatePicker = false })
+                            onDismiss = { showDatePicker = false }
+                        )
                     }
                 }
-                //Occupation
-                Column(
-                    Modifier
-                        .padding(dimensionResource(R.dimen.common_padding_min))
-                        .selectableGroup()
-                ) {
-                    Text(
-                        stringResource(R.string.section_occupation),
-                        style = Typography.labelLarge
-                    )
-                    profiles.forEach { text ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .height(dimensionResource(R.dimen.rb_row_height))
-                                .selectable(
-                                    selected = (text == selectedOption),
-                                    onClick = { onOptionSelected(text) },
-                                    role = Role.RadioButton
-                                ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = (text == selectedOption),
-                                onClick = null
-                            )
-                            Text(
-                                text,
-                                modifier = Modifier.padding(start = dimensionResource(R.dimen.common_padding_default))
-                            )
-                        }
-                    }
-                }
-                //Notes
+
+                // Menú desplegable de especie
+                AntDropdown(
+                    labelRes = R.string.section_occupation,
+                    options = profiles,
+                    selectedOption = selectedOption,
+                    onOptionSelected = { selectedOption = it }
+                )
+
+                // Señas particulares
                 AntTextField(
                     labelRes = R.string.hint_notes,
                     iconRes = R.drawable.ic_notes,
                     maxLengthRes = R.integer.notes_max_length,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    ),
                     singleLine = false,
                     isRequired = false,
                     isClean = isClean,
                     paddingTop = dimensionResource(R.dimen.common_padding_none),
-                    onValueChange = { antecedentesValue = it })
-                //Agree
+                    onValueChange = { antecedentesValue = it }
+                )
+
+                // Aviso de privacidad
                 Row(verticalAlignment = Alignment.CenterVertically) {
+
                     Text(
                         stringResource(R.string.cb_agree),
-                        modifier = Modifier.clickable { isAgree = !isAgree })
+                        modifier = Modifier.clickable {
+                            isAgree = !isAgree
+                        }
+                    )
+
                     Checkbox(
                         checked = isAgree,
-                        onCheckedChange = { isAgree = it })
+                        onCheckedChange = { isAgree = it }
+                    )
                 }
-                //Save
-                val saveAlphaReversed = if (!isShowKeyboard) 1f else 0f
+
+                // Botón Registrar
+                val saveAlphaReversed =
+                    if (!isShowKeyboard) 1f else 0f
+
                 Button(
                     onClick = { saveFun() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .alpha(saveAlphaReversed)
-                        .padding(vertical = dimensionResource(R.dimen.common_padding_default)),
+                        .padding(
+                            vertical = dimensionResource(
+                                R.dimen.common_padding_default
+                            )
+                        ),
                     enabled = isAgree
                 ) {
-                    Icon(painter = painterResource(R.drawable.ic_check), contentDescription = null)
+                    Icon(
+                        painter = painterResource(R.drawable.ic_check),
+                        contentDescription = null
+                    )
+
                     Text(stringResource(R.string.btn_register))
                 }
             }
         }
 
+        // Indicador de carga
         if (inProgress) {
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(colorResource(R.color.progress_background))
-                    .clickable(interactionSource = null, indication = null) {},
+                    .background(
+                        colorResource(R.color.progress_background)
+                    )
+                    .clickable(
+                        interactionSource = null,
+                        indication = null
+                    ) {},
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
+            }
+        }
+    }
+}
+
+/**
+ * Menú desplegable (ExposedDropdownMenuBox de Material 3) que sustituye
+ * al grupo de opciones (RadioButton). Muestra la opción seleccionada en un
+ * campo de solo lectura y despliega la lista al tocarlo.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AntDropdown(
+    modifier: Modifier = Modifier,
+    labelRes: Int,
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = dimensionResource(R.dimen.common_padding_default))
+    ) {
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+            readOnly = true,
+            value = selectedOption,
+            onValueChange = {},
+            label = { Text(stringResource(labelRes)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onOptionSelected(option)
+                        expanded = false
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                )
             }
         }
     }

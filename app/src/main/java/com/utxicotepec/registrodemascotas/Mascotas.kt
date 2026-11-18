@@ -5,6 +5,6 @@ class Mascotas(
     val apellidos: String,
     val peso: Int,
     val fechaNacimiento: Long,
-    val tipoDonacion: String,
+    val especie: String,
     val antecedentes: String
 )

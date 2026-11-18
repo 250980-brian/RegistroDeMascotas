@@ -15,7 +15,8 @@
     <string name="section_occupation">Especie:</string>
     <string name="profile_student">Perro</string>
     <string name="profile_developer">Gato</string>
-    <string name="supporting_required">Otro</string>
+    <string name="profile_other">Otro</string>
+    <string name="supporting_required">*Requerido</string>
 
     <string name="error_min_height_valid">Peso mínimo: 1 kg</string>
     <string name="form_invalid">Formulario incompleto, revise los campos requeridos.</string>
